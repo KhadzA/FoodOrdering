@@ -2,57 +2,88 @@ import Button from '@/components/Button';
 import { defaultPizzaImage } from '@/components/ProductListItem';
 import Colors from '@/constants/Colors';
 import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Image } from 'react-native' 
+import { View, Text, StyleSheet, TextInput, Image, Alert } from 'react-native' 
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
 const CreateProductScreen = () => {
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [errors, setErrors] = useState('');
-    const [image, setImage] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [errors, setErrors] = useState('');
+  const [image, setImage] = useState<string | null>(null);
+  
+  const { id: idString } = useLocalSearchParams();
 
-    const resetFields = () => {
-        setName('');
-        setPrice('');
+  const isUpdating = !!idString;
+
+  const resetFields = () => {
+    setName('');
+    setPrice('');
+  }
+
+  const validateInput = () => {
+    setErrors('');
+    if (!name) {
+      setErrors('Name is required');
+      return false;
+    }
+    if (!price) {
+      setErrors('Price is required');
+      return false;
+    }
+    if (isNaN(parseFloat(price))) {
+      setErrors('Price is not a number');
+      return false;
+    }
+  return true;
+  };
+  
+  const onSubmit = () => {
+    if (isUpdating) {
+      // update
+      onUpdate();
+    } else {
+      onCreate();
+    }
+  };
+
+  const onCreate = async () => {
+    resetFields();
+
+      if (!validateInput()) {
+        return;
+      }
+
+      // const imagePath = await uploadImage();
+
+      // // Save in the database
+      // insertProduct(
+      //   { name, price: parseFloat(price), image: imagePath },
+      //   {
+      //     onSuccess: () => {
+      //       resetFields();
+      //       router.back();
+      //     },
+      //   }
+      // );
+  };
+
+  const onUpdate = async () => {
+    if (!validateInput()) {
+      return;
     }
 
-    const validateInput = () => {
-        setErrors('');
-        if (!name) {
-            setErrors('Name is required');
-            return false;
-        }
-        if (!price) {
-            setErrors('Price is required');
-            return false;
-        }
-        if (isNaN(parseFloat(price))) {
-            setErrors('Price is not a number');
-            return false;
-        }
-        return true;
-    };
+    // const imagePath = await uploadImage();
 
-    const onCreate = async () => {
-        resetFields();
-
-        if (!validateInput()) {
-            return;
-        }
-
-        // const imagePath = await uploadImage();
-
-        // // Save in the database
-        // insertProduct(
-        //     { name, price: parseFloat(price), image: imagePath },
-        //     {
-        //         onSuccess: () => {
-        //             resetFields();
-        //             router.back();
-        //         },
-        //     }
-        // );
+    // updateProduct(
+    //   { id, name, price: parseFloat(price), image: imagePath },
+    //   {
+    //     onSuccess: () => {
+    //       resetFields();
+    //       router.back();
+    //     },
+    //   }
+    // );
   };
   
   const pickImage = async () => {
@@ -69,9 +100,36 @@ const CreateProductScreen = () => {
     }
   };
 
+  const onDelete = () => {
+    // deleteProduct(id, {
+    //   onSuccess: () => {
+    //     resetFields();
+    //     router.replace('/(admin)');
+    //   },
+    // });
+  };
+
+  const confirmDelete = () => {
+    Alert.alert('Confirm', 'Are you sure you want to delete this product', [
+      {
+        text: 'Cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: onDelete,
+      },
+    ]);
+  };
+
+
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{title: 'Create Products'}} />
+      <Stack.Screen
+        options={{
+          title: isUpdating ? "Update Product" : 'Create Products'
+        }}
+      />
 
       <Image
         source={{ uri: image || defaultPizzaImage }}
@@ -100,7 +158,8 @@ const CreateProductScreen = () => {
         />
 
         <Text style={{ color: 'red' }}>{errors}</Text>
-        <Button onPress={onCreate} text={'Create'} />
+        <Button onPress={onCreate} text={isUpdating ? 'Update' : 'Create'} />
+        {isUpdating && <Text onPress={confirmDelete} style={styles.textButton}>Delete</Text>}
     </View>
   )
 }

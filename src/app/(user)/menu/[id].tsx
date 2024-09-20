@@ -32,7 +32,7 @@ const ProductDetailsScreen = () => {
   }
 
   return (
-    <View>
+    <View style={styles.container}>
       <Stack.Screen options={{ title: product?.name }} />
 
       <Image
