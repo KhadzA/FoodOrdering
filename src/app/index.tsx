@@ -6,7 +6,13 @@ import { Link, Stack } from 'expo-router';
 const index = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', padding: 10 }}>
-      <Stack.Screen options={{title: 'Role'}} />
+      <Stack.Screen
+        options={{
+          title: 'Role',
+          headerTitleAlign: 'center'
+        }}
+      />
+      
       <Link href={'/(user)'} asChild>
         <Button text="User" />
       </Link>
