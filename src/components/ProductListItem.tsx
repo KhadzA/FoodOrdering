@@ -12,12 +12,14 @@ type ProductListItemProps = {
 const ProductListItem = ({ product }: ProductListItemProps) => {
   const segments = useSegments();
 
+  const baseSegment = segments[0] === "(admin)" ? "(admin)" : "(user)";
+
   return (
-    <Link href={`/${segments[0]}/menu/${product.id}`} asChild>
+    <Link href={`/${baseSegment}/menu/${product.id}`} asChild>
         <Pressable style={styles.container}>
             <Image source={{ uri: product.image || defaultPizzaImage }}
                 style={styles.image}
-                resizeMode='contain'
+                resizeMode='contain' 
             />
 
             <Text style={styles.title}>{product.name}</Text>
