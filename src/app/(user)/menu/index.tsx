@@ -1,8 +1,26 @@
-import { View, FlatList } from 'react-native';
-import products from '@assets/data/products'
+import { View, FlatList, ActivityIndicator, Text } from 'react-native';
 import ProductListItem from '@/components/ProductListItem';
+import { supabase } from '@/lib/supabase';
+import { useQuery } from '@tanstack/react-query';
 
 export default function MenuScreen() {
+
+  const { data: products, error, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('products').select('*')
+
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data;
+    }
+  })
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  } 
+
   return (
     <View> 
       <FlatList
