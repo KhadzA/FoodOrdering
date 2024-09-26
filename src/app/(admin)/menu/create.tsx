@@ -1,11 +1,15 @@
-  import Button from '@/components/Button';
-  import { defaultPizzaImage } from '@/components/ProductListItem';
-  import Colors from '@/constants/Colors';
-  import { useEffect, useState } from 'react';
-  import { View, Text, StyleSheet, TextInput, Image, Alert } from 'react-native' 
-  import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-  import * as ImagePicker from 'expo-image-picker';
-  import { useDeleteProduct, useInsertProduct, useProduct, useUpdateProduct } from '@/api/products';
+import Button from '@/components/Button';
+import { defaultPizzaImage } from '@/components/ProductListItem';
+import Colors from '@/constants/Colors';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TextInput, Image, Alert } from 'react-native' 
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useDeleteProduct, useInsertProduct, useProduct, useUpdateProduct } from '@/api/products';
+import { randomUUID } from 'expo-crypto';
+import { supabase } from '@/lib/supabase';
+import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system';
 
   const CreateProductScreen = () => {
     const [name, setName] = useState('');
@@ -66,22 +70,23 @@
     };
 
     const onCreate = async () => {
-      resetFields();
 
-        if (!validateInput()) {
-          return;
+      if (!validateInput()) {
+        return;
+      }
+      
+      const imagePath = await uploadImage();
+
+      // Save in the database
+      insertProduct(
+        { name, price: parseFloat(price), image: imagePath },
+        {
+          onSuccess: () => {
+            resetFields();
+            router.back();
+          },
         }
-
-        // Save in the database
-        insertProduct(
-          { name, price: parseFloat(price), image },
-          {
-            onSuccess: () => {
-              resetFields();
-              router.back();
-            },
-          }
-        );
+      );
     };
 
     const onUpdate = async () => {
@@ -136,6 +141,26 @@
           onPress: onDelete,
         },
       ]);
+    };
+
+    const uploadImage = async () => {
+      if (!image?.startsWith('file://')) {
+        return;
+      }
+
+      const base64 = await FileSystem.readAsStringAsync(image, {
+        encoding: 'base64',
+      });
+      const filePath = `${randomUUID()}.png`;
+      const contentType = 'image/png';
+
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, decode(base64), { contentType });
+
+      if (data) {
+        return data.path;
+      }
     };
 
 
